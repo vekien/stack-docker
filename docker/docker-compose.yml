@@ -1,0 +1,55 @@
+version: '3.7'
+
+
+networks:
+    default:
+        external:
+            name: stack
+
+
+services:
+    stack-php:
+        build:
+            context: ..
+            dockerfile: docker/php/Dockerfile
+        ports:
+            - "9000:9000"
+        volumes:
+            - ../project:/var/www:consistent
+            - ../docker/logs/symfony:/var/www/var/log:consistent
+
+
+    stack-nginx:
+        build:
+            context: ..
+            dockerfile: docker/nginx/Dockerfile
+        ports:
+            - "8080:80"
+        volumes:
+            - ../project:/var/www:consistent
+            - ../docker/logs/nginx:/var/log/nginx:consistent
+        depends_on:
+            - stack-php
+
+
+    stack-mysql:
+        image: mysql:5.7
+        command: --default-authentication-plugin=mysql_native_password
+        ports:
+          - "3306:3306"
+        volumes:
+          - stack-mysql:/var/lib/mysql
+        environment:
+            MYSQL_ROOT_PASSWORD: test
+            MYSQL_USER: test
+            MYSQL_PASSWORD: test
+            MYSQL_DATABASE: test
+
+
+    stack-redis:
+        image: redis
+
+
+volumes:
+    stack-mysql:
+        external: false
